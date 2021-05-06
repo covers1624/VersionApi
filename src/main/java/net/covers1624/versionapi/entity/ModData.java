@@ -6,7 +6,7 @@ import javax.persistence.*;
  * Created by covers1624 on 6/1/21.
  */
 @Entity (name = "version_data")
-@Table (uniqueConstraints = @UniqueConstraint (columnNames = { "modId", "mcVersion" }))
+//@Table (uniqueConstraints = @UniqueConstraint (columnNames = { "modId", "mcVersion" }))
 public class ModData {
 
     @Id
