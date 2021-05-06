@@ -1,9 +1,6 @@
 package net.covers1624.versionapi.entity;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.util.List;
 
 /**
@@ -13,6 +10,7 @@ import java.util.List;
 public class ChangeLog {
 
     @Id
+    @GeneratedValue (strategy = GenerationType.IDENTITY)
     private long id;
 
     private String version;

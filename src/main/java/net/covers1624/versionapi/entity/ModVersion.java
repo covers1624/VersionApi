@@ -10,6 +10,7 @@ import javax.persistence.*;
 public class ModVersion {
 
     @Id
+    @GeneratedValue (strategy = GenerationType.IDENTITY)
     private long id;
 
     @Column (nullable = false)
