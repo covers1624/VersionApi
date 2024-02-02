@@ -9,9 +9,12 @@ import javax.persistence.*;
  */
 @Entity (name = "versions")
 @Table (
-        uniqueConstraints = @UniqueConstraint (
-                columnNames = { "modId", "mcVersion" }
-        )
+        uniqueConstraints = {
+                @UniqueConstraint (columnNames = { "modId", "mcVersion" })
+        },
+        indexes = {
+                @Index (columnList = "modId,mcVersion")
+        }
 )
 public class ModVersion {
 
