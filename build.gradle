@@ -13,7 +13,7 @@ java {
 
 group 'net.covers1624'
 archivesBaseName = "VersionApi"
-version '0.1.0'
+version '0.2.0'
 
 version = "$version." + (System.getenv("BUILD_NUMBER") ?: "1")
 println "Starting build of ${archivesBaseName}, Version: ${version}"
@@ -59,7 +59,7 @@ publishing {
         }
     }
     publications {
-        SpringShot(MavenPublication) {
+        VersionAPI(MavenPublication) {
             groupId project.group
             artifactId project.archivesBaseName
             version project.version
@@ -69,7 +69,7 @@ publishing {
                 name = archivesBaseName
                 description = archivesBaseName
                 //The publish plugin doesnt like GString's here apparently..
-                url = "https://github.com/TheCBProject/${archivesBaseName}".toString()
+                url = "https://github.com/covers1624/${archivesBaseName}".toString()
                 scm {
                     url = "https://github.com/covers1624/${archivesBaseName}".toString()
                     connection = "scm:git:git://github.com/covers1624/${archivesBaseName}.git".toString()

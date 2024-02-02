@@ -1,15 +1,12 @@
 package net.covers1624.versionapi.controller.v1;
 
-import com.google.gson.Gson;
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.maven.MavenNotation;
-import net.covers1624.versionapi.entity.JsonCache;
 import net.covers1624.versionapi.entity.ModVersion;
-import net.covers1624.versionapi.json.ForgeVersionJson;
 import net.covers1624.versionapi.json.MarkJson;
-import net.covers1624.versionapi.repo.JsonCacheRepo;
 import net.covers1624.versionapi.repo.ModVersionRepository;
 import net.covers1624.versionapi.security.ApiAuth;
+import net.covers1624.versionapi.service.VersionService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.artifact.repository.metadata.Metadata;
 import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader;
@@ -35,14 +32,12 @@ import java.net.URLConnection;
 @RequestMapping ("/api/v1/")
 public class ApiV1Controller {
 
-    private static final Gson GSON = new Gson();
-
     private final ModVersionRepository modVersionRepo;
-    private final JsonCacheRepo cacheRepo;
+    private final VersionService versionService;
 
-    public ApiV1Controller(ModVersionRepository modVersionRepo, JsonCacheRepo cacheRepo) {
+    public ApiV1Controller(ModVersionRepository modVersionRepo, VersionService versionService) {
         this.modVersionRepo = modVersionRepo;
-        this.cacheRepo = cacheRepo;
+        this.versionService = versionService;
     }
 
     @ResponseBody
@@ -64,7 +59,7 @@ public class ApiV1Controller {
             version.setLatest(modVersion);
             modVersionRepo.save(version);
         }
-        rebuildCache(version);
+        versionService.buildCache(version);
 
         return ResponseEntity.ok(version.getLatest());
     }
@@ -87,18 +82,9 @@ public class ApiV1Controller {
 
         version.setRecommended(modVersion);
         modVersionRepo.save(version);
-        rebuildCache(version);
+        versionService.buildCache(version);
 
         return ResponseEntity.ok(version.getRecommended());
-    }
-
-    private void rebuildCache(ModVersion version) {
-        JsonCache cache = cacheRepo.findByModIdAndMcVersion(version.getModId(), version.getMcVersion());
-        if (cache == null) {
-            cache = new JsonCache(version.getModId(), version.getMcVersion());
-        }
-        cache.setValue(GSON.toJson(ForgeVersionJson.create(version)));
-        cacheRepo.save(cache);
     }
 
     private static MavenNotation computeVersion(MarkJson json) throws IOException {

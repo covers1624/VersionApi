@@ -20,11 +20,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping ("/")
 public class LegacyCheckController {
 
-    private static final Gson GSON = new Gson();
+    private final Gson gson;
     private final ModVersionRepository modVersionRepo;
     private final JsonCacheRepo cacheRepo;
 
-    public LegacyCheckController(ModVersionRepository modVersionRepo, JsonCacheRepo cacheRepo) {
+    public LegacyCheckController(Gson gson, ModVersionRepository modVersionRepo, JsonCacheRepo cacheRepo) {
+        this.gson = gson;
         this.modVersionRepo = modVersionRepo;
         this.cacheRepo = cacheRepo;
     }
@@ -47,7 +48,7 @@ public class LegacyCheckController {
         if (v == null || v.getRecommended() == null) return ResponseEntity.ok("Err: Unknown mod/version");
 
         if (query.equals("legacy")) return ResponseEntity.ok("Ret: " + v.getRecommended());
-        if (query.equals("forge")) return ResponseEntity.ok(GSON.toJson(ForgeVersionJson.create(v)));
+        if (query.equals("forge")) return ResponseEntity.ok(gson.toJson(ForgeVersionJson.create(v)));
         return ResponseEntity.ok("Err: Invalid query type.");
     }
 }
