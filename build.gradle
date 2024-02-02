@@ -1,11 +1,15 @@
 plugins {
-    id 'org.springframework.boot' version '2.4.1'
-    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+    id 'org.springframework.boot' version '2.7.5'
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
     id 'java'
     id 'maven-publish'
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(14)
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
 
 group 'net.covers1624'
 archivesBaseName = "VersionApi"
@@ -24,14 +28,14 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'com.google.code.gson:gson:2.8.5'
-    implementation 'com.google.guava:guava:30.0-jre'
-    implementation 'org.apache.commons:commons-lang3:3.11'
-    implementation 'it.unimi.dsi:fastutil:8.3.1'
-    implementation 'org.apache.commons:commons-compress:1.18'
-    implementation 'org.apache.maven:maven-artifact:3.6.3'
-    implementation 'org.apache.maven:maven-repository-metadata:3.6.3'
-    implementation 'net.covers1624:Quack:0.3.4.+'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.google.guava:guava:33.0.0-jre'
+    implementation 'org.apache.commons:commons-lang3:3.14.0'
+    implementation 'it.unimi.dsi:fastutil:8.5.12'
+    implementation 'org.apache.commons:commons-compress:1.25.0'
+    implementation 'org.apache.maven:maven-artifact:3.9.6'
+    implementation 'org.apache.maven:maven-repository-metadata:3.9.6'
+    implementation 'net.covers1624:Quack:0.4.10.95'
     runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
