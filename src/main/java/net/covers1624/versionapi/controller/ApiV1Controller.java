@@ -8,7 +8,6 @@ import net.covers1624.versionapi.json.MarkJson;
 import net.covers1624.versionapi.json.MarkLatestJson;
 import net.covers1624.versionapi.json.MarkRecommendedJson;
 import net.covers1624.versionapi.repo.ApiKeyRepository;
-import net.covers1624.versionapi.repo.ChangeLogRepository;
 import net.covers1624.versionapi.repo.ModDataRepository;
 import net.covers1624.versionapi.repo.ModVersionRepository;
 import org.apache.commons.lang3.StringUtils;
@@ -43,13 +42,11 @@ public class ApiV1Controller {
     private final ApiKeyRepository apiKeyRepo;
     private final ModVersionRepository modVersionRepo;
     private final ModDataRepository modDataRepo;
-    private final ChangeLogRepository changeLogRepo;
 
-    public ApiV1Controller(ApiKeyRepository apiKeyRepo, ModVersionRepository modVersionRepo, ModDataRepository modDataRepo, ChangeLogRepository changeLogRepo) {
+    public ApiV1Controller(ApiKeyRepository apiKeyRepo, ModVersionRepository modVersionRepo, ModDataRepository modDataRepo) {
         this.apiKeyRepo = apiKeyRepo;
         this.modVersionRepo = modVersionRepo;
         this.modDataRepo = modDataRepo;
-        this.changeLogRepo = changeLogRepo;
     }
 
     @PutMapping ("admin/add_key")
@@ -75,7 +72,6 @@ public class ApiV1Controller {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         MavenNotation notation = computeVersion(json);
-//        MavenNotation changelog = notation.withClassifier("changelog").withExtension("json");
         String[] segs = notation.version.split("-");
         if (segs.length != 2) {
             throw new RuntimeException("Invalid detected version. Expected 2 splits. " + notation.version);
@@ -118,7 +114,6 @@ public class ApiV1Controller {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         MavenNotation notation = computeVersion(json);
-        MavenNotation changelog = notation.withClassifier("changelog").withExtension("txt");
         String[] segs = notation.version.split("-");
         if (segs.length != 2) {
             throw new RuntimeException("Invalid detected version. Expected 2 splits. " + notation.version);

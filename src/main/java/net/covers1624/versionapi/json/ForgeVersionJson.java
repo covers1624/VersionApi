@@ -3,7 +3,9 @@ package net.covers1624.versionapi.json;
 import com.google.gson.*;
 
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by covers1624 on 6/1/21.
@@ -18,18 +20,12 @@ public class ForgeVersionJson {
 
     public List<Promotion> promos = new ArrayList<>();
 
-    public Map<String, List<ChangeLog>> changelog = new HashMap<>();
-
     public void addPromotion(PromotionType type, String mcVersion, String version) {
         promos.add(new Promotion(type, mcVersion, version));
     }
 
-    public void addChangelog(String mcVersion, String version, String changelog) {
-        this.changelog.computeIfAbsent(mcVersion, e -> new ArrayList<>())
-                .add(new ChangeLog(version, changelog));
-    }
-
     public static class Promotion {
+
         public PromotionType type;
         public String mcVersion;
         public String version;
@@ -46,16 +42,6 @@ public class ForgeVersionJson {
         LATEST,
     }
 
-    public static class ChangeLog {
-        public String version;
-        public String changelog;
-
-        public ChangeLog(String version, String changelog) {
-            this.version = version;
-            this.changelog = changelog;
-        }
-    }
-
     public static class Serializer implements JsonSerializer<ForgeVersionJson> {
 
         @Override
@@ -70,14 +56,6 @@ public class ForgeVersionJson {
             }
 
             json.add("promos", promos);
-
-            for (Map.Entry<String, List<ChangeLog>> entry : src.changelog.entrySet()) {
-                JsonObject versionChangelog = new JsonObject();
-                for (ChangeLog changeLog : entry.getValue()) {
-                    versionChangelog.addProperty(changeLog.version, changeLog.changelog);
-                }
-                json.add(entry.getKey(), versionChangelog);
-            }
             return json;
         }
     }

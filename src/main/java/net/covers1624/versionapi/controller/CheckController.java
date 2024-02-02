@@ -5,7 +5,6 @@ import com.google.common.cache.CacheBuilder;
 import net.covers1624.versionapi.entity.ModData;
 import net.covers1624.versionapi.entity.ModVersion;
 import net.covers1624.versionapi.json.ForgeVersionJson;
-import net.covers1624.versionapi.repo.ChangeLogRepository;
 import net.covers1624.versionapi.repo.ModDataRepository;
 import net.covers1624.versionapi.repo.ModVersionRepository;
 import org.springframework.http.HttpStatus;
@@ -29,16 +28,14 @@ public class CheckController {
 
     private final ModVersionRepository modVersionRepo;
     private final ModDataRepository modDataRepo;
-    private final ChangeLogRepository changeLogRepo;
 
     private final Cache<String, String> jsonCache = CacheBuilder.newBuilder()
             .expireAfterAccess(1, TimeUnit.HOURS)
             .build();
 
-    public CheckController(ModVersionRepository modVersionRepo, ModDataRepository modDataRepo, ChangeLogRepository changeLogRepo) {
+    public CheckController(ModVersionRepository modVersionRepo, ModDataRepository modDataRepo) {
         this.modVersionRepo = modVersionRepo;
         this.modDataRepo = modDataRepo;
-        this.changeLogRepo = changeLogRepo;
     }
 
     @Transactional
@@ -74,8 +71,6 @@ public class CheckController {
                 if (modDataOpt.isPresent()) {
                     ModData modData = modDataOpt.get();
                     json.homepage = modData.getHomepage();
-
-//                    changeLogRepo.findByModData(modData).forEach(e -> json.addChangelog(mc, e.getVersion(), e.getChangelog()));
                 }
                 cachedJson = ForgeVersionJson.GSON.toJson(json);
                 jsonCache.put(cacheKey, cachedJson);
