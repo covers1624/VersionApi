@@ -34,7 +34,6 @@ public class CheckController {
         this.cacheRepo = cacheRepo;
     }
 
-    @Transactional
     @RequestMapping (value = "/check", produces = "application/json")
     public ResponseEntity<String> checkVersion(@RequestParam ("mod") String mod, @RequestParam ("mc") String mc) {
         // Query json cache stored in DB first.
