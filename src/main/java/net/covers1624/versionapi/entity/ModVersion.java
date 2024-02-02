@@ -27,9 +27,9 @@ public class ModVersion {
 
     private @Nullable String homepage;
 
-    private String recommended;
+    private @Nullable String recommended;
 
-    private String latest;
+    private @Nullable String latest;
 
     public ModVersion() {
     }
@@ -43,14 +43,14 @@ public class ModVersion {
     //@formatter:off
     public void setModId(String modId) { this.modId = modId; }
     public void setMcVersion(String mcVersion) { this.mcVersion = mcVersion; }
-    public void setHomepage(String homepage) { this.homepage = homepage; }
-    public void setRecommended(String recommended) { this.recommended = recommended; }
-    public void setLatest(String latest) { this.latest = latest; }
+    public void setHomepage(@Nullable String homepage) { this.homepage = homepage; }
+    public void setRecommended(@Nullable String recommended) { this.recommended = recommended; }
+    public void setLatest(@Nullable String latest) { this.latest = latest; }
     public long getId() { return id; }
     public String getModId() { return modId; }
     public String getMcVersion() { return mcVersion; }
-    public String getHomepage() { return homepage; }
-    public String getRecommended() { return recommended; }
-    public String getLatest() { return latest; }
+    public @Nullable String getHomepage() { return homepage; }
+    public @Nullable String getRecommended() { return recommended; }
+    public @Nullable String getLatest() { return latest; }
     //@formatter:on
 }

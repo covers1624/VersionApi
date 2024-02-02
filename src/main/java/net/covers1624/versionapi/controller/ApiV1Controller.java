@@ -5,8 +5,6 @@ import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.versionapi.entity.ApiKey;
 import net.covers1624.versionapi.entity.ModVersion;
 import net.covers1624.versionapi.json.MarkJson;
-import net.covers1624.versionapi.json.MarkLatestJson;
-import net.covers1624.versionapi.json.MarkRecommendedJson;
 import net.covers1624.versionapi.repo.ApiKeyRepository;
 import net.covers1624.versionapi.repo.ModVersionRepository;
 import net.covers1624.versionapi.security.ApiAuth;
@@ -60,7 +58,7 @@ public class ApiV1Controller {
             value = "mark_latest",
             consumes = "application/json"
     )
-    public ResponseEntity<String> markLatest(ApiAuth auth, @RequestBody MarkLatestJson json) throws IOException {
+    public ResponseEntity<String> markLatest(ApiAuth auth, @RequestBody MarkJson json) throws IOException {
         MavenNotation notation = computeVersion(json);
         String[] segs = notation.version.split("-");
         if (segs.length != 2) throw new RuntimeException("Invalid detected version. Expected 2 splits. " + notation.version);
@@ -70,7 +68,7 @@ public class ApiV1Controller {
 
         ModVersion version = modVersionRepo.findVersionByModIdAndMcVersion(notation.module, mcVersion);
         if (version == null) {
-            version = new ModVersion(notation.module, mcVersion, json.homepage);
+            version = new ModVersion(notation.module, mcVersion, json.homepage());
             version.setLatest(modVersion);
             modVersionRepo.save(version);
         }
@@ -83,7 +81,7 @@ public class ApiV1Controller {
             value = "mark_recommended",
             consumes = "application/json"
     )
-    public ResponseEntity<String> markRecommended(ApiAuth auth, @RequestBody MarkRecommendedJson json) throws IOException {
+    public ResponseEntity<String> markRecommended(ApiAuth auth, @RequestBody MarkJson json) throws IOException {
         MavenNotation notation = computeVersion(json);
         String[] segs = notation.version.split("-");
         if (segs.length != 2) throw new RuntimeException("Invalid detected version. Expected 2 splits. " + notation.version);
@@ -92,7 +90,7 @@ public class ApiV1Controller {
         String modVersion = segs[1];
 
         ModVersion version = modVersionRepo.findVersionByModIdAndMcVersion(notation.module, mcVersion);
-        if (version == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Version does not exist. Mark as Latest first. :" + json.suffix);
+        if (version == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Version does not exist. Mark as Latest first. :" + json.suffix());
 
         version.setRecommended(modVersion);
         modVersionRepo.save(version);
@@ -101,12 +99,12 @@ public class ApiV1Controller {
     }
 
     private static MavenNotation computeVersion(MarkJson json) throws IOException {
-        MavenNotation notation = MavenNotation.parse(json.coordinates);
-        URL url = new URL(StringUtils.appendIfMissing(json.mavenRepo, "/") + notation.toModulePath() + "maven-metadata.xml");
+        MavenNotation notation = MavenNotation.parse(json.coordinates());
+        URL url = new URL(StringUtils.appendIfMissing(json.mavenRepo(), "/") + notation.toModulePath() + "maven-metadata.xml");
         try (InputStream is = openUrlStream(url)) {
             Metadata metadata = new MetadataXpp3Reader().read(is);
             return notation.withVersion(FastStream.of(metadata.getVersioning().getVersions())
-                    .filter(e -> e.endsWith(json.suffix))
+                    .filter(e -> e.endsWith(json.suffix()))
                     .first());
         } catch (XmlPullParserException e) {
             throw new IOException("Failed to parse MavenMetadata.", e);

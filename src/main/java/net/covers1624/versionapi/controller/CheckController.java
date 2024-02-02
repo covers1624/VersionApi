@@ -62,5 +62,4 @@ public class CheckController {
 
         return ResponseEntity.ok(cachedJson);
     }
-
 }
