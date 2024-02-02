@@ -1,34 +1,32 @@
-package net.covers1624.versionapi.controller;
+package net.covers1624.versionapi.controller.v1;
 
 import com.google.gson.Gson;
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.maven.MavenNotation;
-import net.covers1624.versionapi.entity.ApiKey;
 import net.covers1624.versionapi.entity.JsonCache;
 import net.covers1624.versionapi.entity.ModVersion;
 import net.covers1624.versionapi.json.ForgeVersionJson;
 import net.covers1624.versionapi.json.MarkJson;
-import net.covers1624.versionapi.repo.ApiKeyRepository;
 import net.covers1624.versionapi.repo.JsonCacheRepo;
 import net.covers1624.versionapi.repo.ModVersionRepository;
 import net.covers1624.versionapi.security.ApiAuth;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.maven.artifact.repository.metadata.Metadata;
 import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.UUID;
 
 /**
  * Created by covers1624 on 6/1/21.
@@ -37,27 +35,14 @@ import java.util.UUID;
 @RequestMapping ("/api/v1/")
 public class ApiV1Controller {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson GSON = new Gson();
 
-    private final ApiKeyRepository apiKeyRepo;
     private final ModVersionRepository modVersionRepo;
     private final JsonCacheRepo cacheRepo;
 
-    public ApiV1Controller(ApiKeyRepository apiKeyRepo, ModVersionRepository modVersionRepo, JsonCacheRepo cacheRepo) {
-        this.apiKeyRepo = apiKeyRepo;
+    public ApiV1Controller(ModVersionRepository modVersionRepo, JsonCacheRepo cacheRepo) {
         this.modVersionRepo = modVersionRepo;
         this.cacheRepo = cacheRepo;
-    }
-
-    @PutMapping ("admin/add_key")
-    public ResponseEntity<String> addApiKey(ApiAuth auth) {
-        auth.requireAdmin("Only admins can add api keys.");
-
-        ApiKey newKey = new ApiKey(UUID.randomUUID().toString());
-        apiKeyRepo.save(newKey);
-        LOGGER.info("Added new API Key: " + newKey.getSecret());
-        return ResponseEntity.ok(newKey.getSecret());
     }
 
     @ResponseBody
