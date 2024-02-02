@@ -22,6 +22,9 @@ public class ModVersion {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private long id;
 
+    @Version
+    private long vLock;
+
     @Column (nullable = false)
     private String modId;
 
@@ -50,6 +53,7 @@ public class ModVersion {
     public void setRecommended(@Nullable String recommended) { this.recommended = recommended; }
     public void setLatest(@Nullable String latest) { this.latest = latest; }
     public long getId() { return id; }
+    public long getVLock() { return vLock; }
     public String getModId() { return modId; }
     public String getMcVersion() { return mcVersion; }
     public @Nullable String getHomepage() { return homepage; }
