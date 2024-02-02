@@ -47,11 +47,6 @@ public class ModVersion {
     }
 
     //@formatter:off
-    public void setModId(String modId) { this.modId = modId; }
-    public void setMcVersion(String mcVersion) { this.mcVersion = mcVersion; }
-    public void setHomepage(@Nullable String homepage) { this.homepage = homepage; }
-    public void setRecommended(@Nullable String recommended) { this.recommended = recommended; }
-    public void setLatest(@Nullable String latest) { this.latest = latest; }
     public long getId() { return id; }
     public long getVLock() { return vLock; }
     public String getModId() { return modId; }
@@ -59,5 +54,10 @@ public class ModVersion {
     public @Nullable String getHomepage() { return homepage; }
     public @Nullable String getRecommended() { return recommended; }
     public @Nullable String getLatest() { return latest; }
+    public void setModId(String modId) { this.modId = modId; }
+    public void setMcVersion(String mcVersion) { this.mcVersion = mcVersion; }
+    public void setHomepage(@Nullable String homepage) { this.homepage = homepage; }
+    public void setRecommended(@Nullable String recommended) { this.recommended = recommended; }
+    public void setLatest(@Nullable String latest) { this.latest = latest; }
     //@formatter:on
 }
