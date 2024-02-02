@@ -2,6 +2,7 @@ package net.covers1624.versionapi.controller;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.gson.Gson;
 import net.covers1624.versionapi.entity.ModVersion;
 import net.covers1624.versionapi.json.ForgeVersionJson;
 import net.covers1624.versionapi.repo.ModVersionRepository;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -21,7 +23,9 @@ import java.util.concurrent.TimeUnit;
 @RequestMapping ("/")
 public class CheckController {
 
-    private static final String EMPTY_PROMOS = ForgeVersionJson.GSON.toJson(new ForgeVersionJson());
+    private static final Gson GSON = new Gson();
+
+    private static final String EMPTY_PROMOS = GSON.toJson(new ForgeVersionJson(null, Map.of()));
 
     private final ModVersionRepository modVersionRepo;
 
@@ -50,17 +54,8 @@ public class CheckController {
                     return ResponseEntity.ok(cachedJson);
                 }
 
-                ForgeVersionJson json = new ForgeVersionJson();
-                json.homepage = version.getHomepage();
-
-                if (version.getRecommended() != null) {
-                    json.addPromotion(ForgeVersionJson.PromotionType.RECOMMENDED, version.getMcVersion(), version.getRecommended());
-                }
-
-                if (version.getLatest() != null) {
-                    json.addPromotion(ForgeVersionJson.PromotionType.LATEST, version.getMcVersion(), version.getLatest());
-                }
-                cachedJson = ForgeVersionJson.GSON.toJson(json);
+                ForgeVersionJson json = ForgeVersionJson.create(version);
+                cachedJson = GSON.toJson(json);
                 jsonCache.put(cacheKey, cachedJson);
             }
         }
