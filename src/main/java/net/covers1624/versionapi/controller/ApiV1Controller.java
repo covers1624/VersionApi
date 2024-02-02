@@ -1,15 +1,15 @@
 package net.covers1624.versionapi.controller;
 
+import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.versionapi.entity.ApiKey;
-import net.covers1624.versionapi.entity.ModData;
 import net.covers1624.versionapi.entity.ModVersion;
 import net.covers1624.versionapi.json.MarkJson;
 import net.covers1624.versionapi.json.MarkLatestJson;
 import net.covers1624.versionapi.json.MarkRecommendedJson;
 import net.covers1624.versionapi.repo.ApiKeyRepository;
-import net.covers1624.versionapi.repo.ModDataRepository;
 import net.covers1624.versionapi.repo.ModVersionRepository;
+import net.covers1624.versionapi.security.ApiAuth;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,7 +18,6 @@ import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +26,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -41,20 +39,16 @@ public class ApiV1Controller {
 
     private final ApiKeyRepository apiKeyRepo;
     private final ModVersionRepository modVersionRepo;
-    private final ModDataRepository modDataRepo;
 
-    public ApiV1Controller(ApiKeyRepository apiKeyRepo, ModVersionRepository modVersionRepo, ModDataRepository modDataRepo) {
+    public ApiV1Controller(ApiKeyRepository apiKeyRepo, ModVersionRepository modVersionRepo) {
         this.apiKeyRepo = apiKeyRepo;
         this.modVersionRepo = modVersionRepo;
-        this.modDataRepo = modDataRepo;
     }
 
     @PutMapping ("admin/add_key")
-    public ResponseEntity<String> addApiKey(Authentication auth) {
-        ApiKey key = (ApiKey) auth.getCredentials();
-        if (key == null || !key.isAdmin()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+    public ResponseEntity<String> addApiKey(ApiAuth auth) {
+        auth.requireAdmin("Only admins can add api keys.");
+
         ApiKey newKey = new ApiKey(UUID.randomUUID().toString());
         apiKeyRepo.save(newKey);
         LOGGER.info("Added new API Key: " + newKey.getSecret());
@@ -66,39 +60,20 @@ public class ApiV1Controller {
             value = "mark_latest",
             consumes = "application/json"
     )
-    public ResponseEntity<String> markLatest(@RequestBody MarkLatestJson json, Authentication auth) throws IOException {
-        ApiKey key = (ApiKey) auth.getCredentials();
-        if (key == null || !key.isAdmin()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+    public ResponseEntity<String> markLatest(ApiAuth auth, @RequestBody MarkLatestJson json) throws IOException {
         MavenNotation notation = computeVersion(json);
         String[] segs = notation.version.split("-");
-        if (segs.length != 2) {
-            throw new RuntimeException("Invalid detected version. Expected 2 splits. " + notation.version);
-        }
+        if (segs.length != 2) throw new RuntimeException("Invalid detected version. Expected 2 splits. " + notation.version);
+
         String mcVersion = segs[0];
         String modVersion = segs[1];
 
-        Optional<ModVersion> versionOpt = modVersionRepo.findVersionByModIdAndMcVersion(notation.module, mcVersion);
-
-        ModVersion version = versionOpt.orElseGet(() -> {
-            Optional<ModData> modDataOpt = modDataRepo.findVersionByModIdAndMcVersion(notation.module, mcVersion);
-
-            ModData modData = modDataOpt.orElseGet(() -> {
-                ModData m = new ModData();
-                m.setModId(notation.module);
-                m.setMcVersion(mcVersion);
-                m.setHomepage(json.homepage);
-                modDataRepo.save(m);
-                return m;
-            });
-
-            ModVersion m = new ModVersion(notation.module, mcVersion);
-            m.setModData(modData);
-            m.setLatest(modVersion);
-            modVersionRepo.save(m);
-            return m;
-        });
+        ModVersion version = modVersionRepo.findVersionByModIdAndMcVersion(notation.module, mcVersion);
+        if (version == null) {
+            version = new ModVersion(notation.module, mcVersion, json.homepage);
+            version.setLatest(modVersion);
+            modVersionRepo.save(version);
+        }
 
         return ResponseEntity.ok(version.getLatest());
     }
@@ -108,25 +83,17 @@ public class ApiV1Controller {
             value = "mark_recommended",
             consumes = "application/json"
     )
-    public ResponseEntity<String> markRecommended(@RequestBody MarkRecommendedJson json, Authentication auth) throws IOException {
-        ApiKey key = (ApiKey) auth.getCredentials();
-        if (key == null || !key.isAdmin()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+    public ResponseEntity<String> markRecommended(ApiAuth auth, @RequestBody MarkRecommendedJson json) throws IOException {
         MavenNotation notation = computeVersion(json);
         String[] segs = notation.version.split("-");
-        if (segs.length != 2) {
-            throw new RuntimeException("Invalid detected version. Expected 2 splits. " + notation.version);
-        }
+        if (segs.length != 2) throw new RuntimeException("Invalid detected version. Expected 2 splits. " + notation.version);
+
         String mcVersion = segs[0];
         String modVersion = segs[1];
 
-        Optional<ModVersion> versionOpt = modVersionRepo.findVersionByModIdAndMcVersion(notation.module, mcVersion);
+        ModVersion version = modVersionRepo.findVersionByModIdAndMcVersion(notation.module, mcVersion);
+        if (version == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Version does not exist. Mark as Latest first. :" + json.suffix);
 
-        if (versionOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Version does not exist. Mark as Latest first. :" + json.suffix);
-        }
-        ModVersion version = versionOpt.get();
         version.setRecommended(modVersion);
         modVersionRepo.save(version);
 
@@ -138,13 +105,11 @@ public class ApiV1Controller {
         URL url = new URL(StringUtils.appendIfMissing(json.mavenRepo, "/") + notation.toModulePath() + "maven-metadata.xml");
         try (InputStream is = openUrlStream(url)) {
             Metadata metadata = new MetadataXpp3Reader().read(is);
-            Optional<String> versionOpt = metadata.getVersioning().getVersions()
-                    .stream()
+            return notation.withVersion(FastStream.of(metadata.getVersioning().getVersions())
                     .filter(e -> e.endsWith(json.suffix))
-                    .findFirst();
-            return notation.withVersion(versionOpt.orElseThrow(() -> new RuntimeException("Failed to find version for build number: " + json.suffix)));
+                    .first());
         } catch (XmlPullParserException e) {
-            throw new RuntimeException("Failed to parse MavenMetadata.", e);
+            throw new IOException("Failed to parse MavenMetadata.", e);
         }
     }
 
@@ -152,8 +117,7 @@ public class ApiV1Controller {
         URL currentUrl = url;
         for (int redirects = 0; redirects < 20; redirects++) {
             URLConnection c = currentUrl.openConnection();
-            if (c instanceof HttpURLConnection) {
-                HttpURLConnection huc = (HttpURLConnection) c;
+            if (c instanceof HttpURLConnection huc) {
                 huc.setInstanceFollowRedirects(false);
                 int responseCode = huc.getResponseCode();
                 if (responseCode >= 300 && responseCode <= 399) {
@@ -171,5 +135,4 @@ public class ApiV1Controller {
         }
         throw new IOException("Too many redirects while trying to fetch " + url);
     }
-
 }

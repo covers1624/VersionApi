@@ -2,10 +2,8 @@ package net.covers1624.versionapi.controller;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import net.covers1624.versionapi.entity.ModData;
 import net.covers1624.versionapi.entity.ModVersion;
 import net.covers1624.versionapi.json.ForgeVersionJson;
-import net.covers1624.versionapi.repo.ModDataRepository;
 import net.covers1624.versionapi.repo.ModVersionRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,25 +24,21 @@ public class CheckController {
     private static final String EMPTY_PROMOS = ForgeVersionJson.GSON.toJson(new ForgeVersionJson());
 
     private final ModVersionRepository modVersionRepo;
-    private final ModDataRepository modDataRepo;
 
     private final Cache<String, String> jsonCache = CacheBuilder.newBuilder()
             .expireAfterAccess(1, TimeUnit.HOURS)
             .build();
 
-    public CheckController(ModVersionRepository modVersionRepo, ModDataRepository modDataRepo) {
+    public CheckController(ModVersionRepository modVersionRepo) {
         this.modVersionRepo = modVersionRepo;
-        this.modDataRepo = modDataRepo;
     }
 
     @Transactional
     @RequestMapping (value = "/check", produces = "application/json")
     public ResponseEntity<String> checkVersion(@RequestParam ("mod") String mod, @RequestParam ("mc") String mc) {
-        Optional<ModVersion> versionOpt = modVersionRepo.findVersionByModIdAndMcVersion(mod, mc);
-        if (versionOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(EMPTY_PROMOS);
-        }
-        ModVersion version = versionOpt.get();
+        ModVersion version = modVersionRepo.findVersionByModIdAndMcVersion(mod, mc);
+        if (version == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(EMPTY_PROMOS);
+
         String cacheKey = mod + "," + mc + "," + version.getRecommended() + "," + version.getLatest();
         String cachedJson = jsonCache.getIfPresent(cacheKey);
         //Kay, doesn't exist in cache, lets compute it.
@@ -56,9 +49,9 @@ public class CheckController {
                 if (cachedJson != null) {
                     return ResponseEntity.ok(cachedJson);
                 }
-                Optional<ModData> modDataOpt = modDataRepo.findVersionByModIdAndMcVersion(mod, mc);
 
                 ForgeVersionJson json = new ForgeVersionJson();
+                json.homepage = version.getHomepage();
 
                 if (version.getRecommended() != null) {
                     json.addPromotion(ForgeVersionJson.PromotionType.RECOMMENDED, version.getMcVersion(), version.getRecommended());
@@ -66,11 +59,6 @@ public class CheckController {
 
                 if (version.getLatest() != null) {
                     json.addPromotion(ForgeVersionJson.PromotionType.LATEST, version.getMcVersion(), version.getLatest());
-                }
-
-                if (modDataOpt.isPresent()) {
-                    ModData modData = modDataOpt.get();
-                    json.homepage = modData.getHomepage();
                 }
                 cachedJson = ForgeVersionJson.GSON.toJson(json);
                 jsonCache.put(cacheKey, cachedJson);
