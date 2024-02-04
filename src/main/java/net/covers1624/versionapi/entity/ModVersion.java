@@ -1,8 +1,8 @@
 package net.covers1624.versionapi.entity;
 
+import jakarta.persistence.*;
 import org.jetbrains.annotations.Nullable;
 
-import javax.persistence.*;
 
 /**
  * Created by covers1624 on 6/1/21.

@@ -1,6 +1,6 @@
 package net.covers1624.versionapi.entity;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * Created by covers1624 on 2/2/24.

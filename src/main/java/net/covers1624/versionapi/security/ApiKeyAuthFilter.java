@@ -2,7 +2,7 @@ package net.covers1624.versionapi.security;
 
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Created by covers1624 on 7/11/20.
