@@ -49,11 +49,7 @@ public class MetricsService {
         writeApi = client.makeWriteApi();
     }
 
-    public void check(String status, String mod, String mc) {
-        check(null, status, mod, mc);
-    }
-
-    public void check(@Nullable String type, String status, String mod, String mc) {
+    public void check(String type, String status, String mod, String mc) {
         if (writeApi == null) return;
 
         addPoint(

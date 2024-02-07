@@ -44,7 +44,7 @@ public class CheckController {
         // This is auto updated when latest/recommended changes.
         JsonCache cache = cacheRepo.findByModIdAndMcVersion(mod, mc);
         if (cache != null) {
-            metrics.check("cached", mod, mc);
+            metrics.check("forge", "cached", mod, mc);
             return ResponseEntity.ok(cache.getValue());
         }
 
@@ -52,11 +52,11 @@ public class CheckController {
         // We will hit this if cache fails to build or the version does not exist yet.
         ModVersion version = modVersionRepo.findVersionByModIdAndMcVersion(mod, mc);
         if (version == null) {
-            metrics.check("failed", mod, mc);
+            metrics.check("forge", "failed", mod, mc);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(empty);
         }
 
-        metrics.check("uncached", mod, mc);
+        metrics.check("forge", "uncached", mod, mc);
         // Full Cache miss, this should never happen, but for integrity, sure.
         return ResponseEntity.ok(gson.toJson(ForgeVersionJson.create(version)));
     }
