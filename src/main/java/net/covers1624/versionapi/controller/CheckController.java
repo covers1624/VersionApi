@@ -38,7 +38,13 @@ public class CheckController {
         empty = gson.toJson(new ForgeVersionJson(null, Map.of()));
     }
 
+    // Thanks spring for deprecating trailing slash support.
     @RequestMapping (value = "/check", produces = "application/json")
+    public ResponseEntity<String> checkVersion2(@RequestParam ("mod") String mod, @RequestParam ("mc") String mc) {
+        return checkVersion(mod, mc);
+    }
+
+    @RequestMapping (value = "/check/", produces = "application/json")
     public ResponseEntity<String> checkVersion(@RequestParam ("mod") String mod, @RequestParam ("mc") String mc) {
         // Query json cache stored in DB first.
         // This is auto updated when latest/recommended changes.
