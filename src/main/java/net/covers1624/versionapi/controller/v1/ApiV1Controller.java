@@ -56,9 +56,9 @@ public class ApiV1Controller {
         ModVersion version = modVersionRepo.findVersionByModIdAndMcVersion(notation.module, mcVersion);
         if (version == null) {
             version = new ModVersion(notation.module, mcVersion, json.homepage());
-            version.setLatest(modVersion);
-            modVersionRepo.save(version);
         }
+        version.setLatest(modVersion);
+        modVersionRepo.save(version);
         versionService.buildCache(version);
 
         return ResponseEntity.ok(version.getLatest());
